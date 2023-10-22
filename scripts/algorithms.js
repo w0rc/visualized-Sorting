@@ -8,7 +8,7 @@ function* ShuffleGenerator(arr){
     let n = 0;
     for(let i = arr.length - 1; i > 0; i--){
         const r = Math.floor(Math.random() * (i + 1));
-        yield [i, r, i];
+        yield [i, i, r];
         n++;
         [arr[i], arr[r]] = [arr[r], arr[i]];
     }
@@ -16,7 +16,7 @@ function* ShuffleGenerator(arr){
 }
 /**
     バブルソート O(n^2)
-    */
+ */
 function* BubbleSortGenerator(arr){
     let n = 0, left = 0, right = 0;
     const len = arr.length;
@@ -34,7 +34,7 @@ function* BubbleSortGenerator(arr){
 }
 /**
     選択ソート O(n^2)
-    */
+ */
 function* SelectionSortGenerator(arr){
     let n = 0;
     const len = arr.length;
@@ -66,5 +66,33 @@ function* InsertionSortGenerator(arr){
             n++;
         }
     }
+    return n;
+}
+/**
+    クイックソート O(n log n)
+ */
+function* QuickSortGenerator(arr){
+    let n = 0;
+    function* partition(left, right){
+        let [i, j] = [left, right];
+        const pivot = arr[Math.floor((left+right)/2)];
+        for(;;){
+            while(arr[i] < pivot) i++;
+            while(pivot < arr[j]) j--;
+            yield [pivot, i, j];
+            
+            if(j <= i){
+                break;
+            }else{
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+                i++;
+                j--;
+            }
+            n++;
+        }
+        if(left < i-1) yield* partition(left, i-1);
+        if(j+1 < right) yield* partition(j+1, right);
+    }
+    yield* partition(0, arr.length-1);
     return n;
 }

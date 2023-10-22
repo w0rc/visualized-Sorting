@@ -2,7 +2,7 @@
 
 /* --------データ準備用のメソッド-------- */
 /**
-    乱数生成（XorShift：シード固定できる乱数生成器）
+    乱数生成（XorShift：シードが固定できる乱数生成器として採用）
  */
 class XorShift {
     constructor(seed = performance.now()){
@@ -21,12 +21,12 @@ class XorShift {
 };
 /**
     シャッフル（Fisher-Yatesのシャッフル）
-    ソートアルゴリズム実行前に使用する）
+    ソートアルゴリズム実行前に使用する
  */
 function shuffle(arr, seed){
-    const XS = new XorShift(seed ? seed : 12345678);
+    const RANDOM = new XorShift(seed ? seed : 12345678);
     for(let i = arr.length - 1; i > 0; i--){
-        const r = Math.floor(XS.rand() * (i + 1));
+        const r = Math.floor(RANDOM.rand() * (i + 1));
         [arr[i], arr[r]] = [arr[r], arr[i]];
     }
 }
@@ -36,9 +36,34 @@ function shuffle(arr, seed){
     タイマー
  */
 class Timer{
-    constructor(){ this.start = performance.now(); };
-    run(){ this.start = performance.now(); };
-    stop(){ return performance.now() - this.start; };
+    constructor(){
+        this.start = 0;
+        this.elapsed = 0;
+        this.running = false;
+    };
+    run(){
+        this.running = true;
+        this.elapsed = 0;
+        this.start = performance.now();
+    };
+    resume(){
+        if(!this.running){
+            this.running = true;
+            this.start = performance.now();
+        }
+    };
+    pause(){
+        if(this.running){
+            this.running = false;
+            this.elapsed = this.elapsed + (performance.now() - this.start);
+        }
+    };
+    stop(){
+        if(this.running){
+            this.running = false;
+            return this.elapsed + (performance.now() - this.start);    
+        }
+    };
 };
 /**
     描画エリアのリサイズとキャンバスの初期化
@@ -77,9 +102,9 @@ function draw( canvas, context, data, flags ){
     for(let i=0; i<length; i++){
         context.fillStyle = "#aaaaaa";
         if(flags){
-            if(i===flags[0]) context.fillStyle = "#b03333"; // チェック中のデータ
-            if(i===flags[1]) context.fillStyle = "#33b033"; // 交換対象（小さい)
-            if(i===flags[2]) context.fillStyle = "#3333b0"; // 交換対象（大きい）
+            if(i===flags[0]) context.fillStyle = "#b03333";
+            if(i===flags[1]) context.fillStyle = "#33b033";
+            if(i===flags[2]) context.fillStyle = "#3333b0";
         }
         context.fillRect(
             i*dw, canvas.height-(data[i]*dh), 
@@ -102,15 +127,15 @@ function main() {
     const iterator = ShuffleGenerator(data);
     */
     // 描画データをシャッフルする
-    shuffle(data, 12345678);
-    // 可視化するアルゴリズムのイテレータ
+    shuffle(data);
+    // 可視化するアルゴリズムを順番に取り出せるようにする
     const Generators = [
         BubbleSortGenerator,
         SelectionSortGenerator,
-        InsertionSortGenerator
-    ];
-    let genIndex = 0;
-    let generator = Generators[genIndex];
+        InsertionSortGenerator,
+        QuickSortGenerator
+    ].values();
+    let generator = Generators.next().value;
     let iterator = generator(data);
 
     // 描画ループ
@@ -122,39 +147,50 @@ function main() {
     const handler = {
         id : undefined,
         start : performance.now(),
-        interval : 10,
+        interval : 1000/30, // default: 1000/30
         done : false,
     };
     function loop( timestamp ){
-        // 描画時間を調整
+        // 描画タイミングを調整
         if( handler.interval > timestamp - handler.start ){
             handler.id = window.requestAnimationFrame(loop);
             return;
         }else{
             handler.start = timestamp;
         }
-
-        // イテレータを進める
+        // イテレータを進める（処理時間計測のため、タイマーのポーズを解除）
+        timer.resume();
         const result = iterator.next();
-        // イテレータが完了したら終了する
+        // イテレータの結果をチェック
         if( result.done ){
+            // イテレータが完了した場合
+            // タイマーをストップして処理結果をコンソール出力する
+            const time = Math.floor(timer.stop()*10.0)/10.0;
+            console.info(generator.name+"／ ループ回数："+result.value+" ／ 処理時間："+time+"[ms]");
+            // 最終状態で描画してからアニメーションをキャンセル
             draw(canvas, context, data);
             handler.id = window.cancelAnimationFrame(handler.id);
-            console.info(generator.name+"／ ループ回数："+result.value+" ／ 実行時間："+timer.stop()+"[ms]");
 
-            // 次のアルゴリズムを呼び出す
-            shuffle(data, 12345678);
-            generator = Generators[++genIndex];
+            // 次のアルゴリズムを取り出す
+            generator = Generators.next().value;
             if( generator ){
+                // データを再度シャッフルしてからアニメーションを再開
+                shuffle(data);
                 iterator = generator(data);
                 handler.id = window.requestAnimationFrame(loop);
+                // タイマーはソート処理部分のみ計測するため起動後すぐにポーズ
                 timer.run();
+                timer.pause();
             }else{
+                // 次のアルゴリズムがない場合は終了状態とする
                 handler.done = true;
             }
             return;
         }else{
-        // 描画して次のループへ
+            // イテレータが続く場合
+            // 処理時間計測のため、タイマーは次のイテレータ直前までポーズ
+            timer.pause();
+            // 描画して次のループへ
             draw(canvas, context, data, result.value );
             handler.id = window.requestAnimationFrame(loop);
         }
@@ -163,8 +199,10 @@ function main() {
     // イベントハンドラの設定
     window.addEventListener('click', (event)=>{
         // console.log(event);
+
+        // 終了状態のときは何もしない
         if( handler.done ) return;
-        // クリックしたら一時停止
+        // クリックごとにアニメーションを一時停止／再開する
         if( !handler.id ){
             handler.id = window.requestAnimationFrame(loop);
         }else{
@@ -173,7 +211,8 @@ function main() {
     });
     window.addEventListener('resize', (event) => {
         // console.log(event);
-        // 画面のリサイズが発生したらキャンバスサイズもリサイズ
+
+        // 画面のリサイズが発生したらキャンバスサイズもリサイズする
         setCanvas();
         draw(canvas, context, data);
     });
@@ -181,7 +220,9 @@ function main() {
     // ループの開始
     draw( canvas, context, data );
     handler.id = window.requestAnimationFrame(loop);
+    // タイマーはソート処理部分のみ計測するため起動後すぐにポーズ
     timer.run();
+    timer.pause();
 }
 
 // DOMContentLoaded 契機に処理を開始する
