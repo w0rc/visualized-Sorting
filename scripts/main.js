@@ -7,11 +7,6 @@ class DrawManager {
     before = { target: undefined, strings: [] };
 
     constructor ( canvasId ) {
-        document.getElementById( "canvas" )
-            .setAttribute( "width", document.getElementById( "wrapper" ).clientWidth );
-        document.getElementById( "canvas" )
-            .setAttribute( "height", document.getElementById( "wrapper" ).clientHeight );
-        
         // キャンバスとコンテキストの取得
         this.canvas = document.getElementById( canvasId );
         if ( !this.canvas || !this.canvas.getContext ) {
