@@ -132,10 +132,10 @@ function main () {
             handler.id = window.cancelAnimationFrame( handler.id );
             // 結果を表示する
             drawManager.drawString( {
-                str: `Algorithm: ${algorithm.constructor.name}
-                    , count: ${result.value.loops}
-                    , swap: ${result.value.swap}
-                    , time: ${time} [ms]`,
+                str: `Algorithm: ${algorithm.constructor.name}` +
+                    `, count: ${result.value.loops}` +
+                    `, swap: ${result.value.swaps}` +
+                    `, time: ${time} [ms]`,
                 line: 1
             } );
             // 次のアルゴリズムを取り出す
