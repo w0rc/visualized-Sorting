@@ -1,20 +1,32 @@
 "use strict";
 
-/*
-    描画用アルゴリズムのベースクラス
-*/
+/**
+ *  描画用アルゴリズムのベースクラス
+ */
 class VisualizedAlgorithm {
+    /**
+     *  描画用アルゴリズムのコンストラクタ
+     *  @param {Object} arr 
+     */
     constructor ( arr ) {
         this.arr = [...arr];
         this.loops = 0;
         this.swaps = 0;
     }
+    /**
+     *  処理中のデータを返却する
+     *  @returns {Object} 
+     */
     yieldProperties ( ...args ) {
         return {
             data: this.arr,
             coloringIndices: args
         }
     }
+    /**
+     *  処理後のデータを返却する
+     *  @returns {Object}
+     */
     resultProperties () {
         return {
             data: this.arr,
@@ -22,15 +34,18 @@ class VisualizedAlgorithm {
             swaps: this.swaps
         }
     }
+    /**
+     *  処理用のイテレータを返却する
+     */
     *generator () {
         yield this.arr;
     }
 }
 
 /* --------可視化するアルゴリズム--------*/
-/*
-    バブルソート O(n^2)
-*/
+/**
+ *  バブルソート O(n^2)
+ */
 class BubbleSort extends VisualizedAlgorithm {
     *generator ( ) {
         let left = 0, right = 0;
@@ -50,9 +65,9 @@ class BubbleSort extends VisualizedAlgorithm {
     }
 }
 
-/*
-    選択ソート O(n^2)
-*/
+/**
+ *  選択ソート O(n^2)
+ */
 class SelectionSort extends VisualizedAlgorithm {
     *generator ( ) {
         const len = this.arr.length;
@@ -72,9 +87,9 @@ class SelectionSort extends VisualizedAlgorithm {
     }
 }
 
-/*
-    挿入ソート O(n^2)
-*/
+/**
+ *  挿入ソート O(n^2)
+ */
 class InsertionSort extends VisualizedAlgorithm {
     *generator () {
         const len = this.arr.length;
@@ -92,9 +107,9 @@ class InsertionSort extends VisualizedAlgorithm {
     }
 }
 
-/*
-    クイックソート O(n log n)
-*/
+/**
+ *  クイックソート O(n log n)
+ */
 class QuickSort extends VisualizedAlgorithm {
     *generator ( ) {
         const len = this.arr.length;
@@ -141,9 +156,9 @@ class QuickSort extends VisualizedAlgorithm {
     }
 }
 
-/*
-    マージソート O(n log n)
-*/
+/**
+ *  マージソート O(n log n)
+ */
 class MergeSort extends VisualizedAlgorithm {
     *generator ( ) {
         const len = this.arr.length;
@@ -163,7 +178,6 @@ class MergeSort extends VisualizedAlgorithm {
                 const mid = Math.floor( ( left + right ) / 2 );
                 const leftArr = yield* mergesort( arr, left, mid );
                 const rightArr = yield* mergesort( arr, mid, right );
-
                 for ( let [i, j] = [0, 0]; ; ) {
                     if ( leftArr[i] < rightArr[j] ) {
                         _arr.push( leftArr[i] );
@@ -179,7 +193,6 @@ class MergeSort extends VisualizedAlgorithm {
                         data: arr,
                         coloringIndices: [-1, left + i, mid + j]
                     }
-
                     if ( i >= leftArr.length || j >= rightArr.length ) {
                         _arr.push( ...rightArr.slice( j ) );
                         _arr.push( ...leftArr.slice( i ) );
@@ -197,9 +210,9 @@ class MergeSort extends VisualizedAlgorithm {
     }
 }
 
-/*
-    シャッフル（Fisher-Yatesのシャッフル with XorShift） O(n)
-*/
+/**
+ *  シャッフル（Fisher-Yatesのシャッフル with XorShift） O(n)
+ */
 class FisherYatesShuffle extends VisualizedAlgorithm {
     constructor ( arr, seed ) {
         super( arr );
