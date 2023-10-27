@@ -81,7 +81,7 @@ class DrawManager {
  *  メイン処理
  */
 function main () {
-    // キャンバスとコンテキストを取得
+    // 描画管理クラス
     const drawManager = new DrawManager( "canvas" );
     // 描画データの準備
     const NUM = 128;
