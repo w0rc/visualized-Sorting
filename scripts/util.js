@@ -7,6 +7,7 @@
 class XorShift {
     /**
      *  XorShift 乱数の最大値
+     *  @private
      */
     static MAX = 0xffffffff;
     /**
