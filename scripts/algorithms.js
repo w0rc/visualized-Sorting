@@ -113,46 +113,39 @@ class InsertionSort extends VisualizedAlgorithm {
 class QuickSort extends VisualizedAlgorithm {
     *generator ( ) {
         const len = this.arr.length;
-        let [loop, swap] = [0, 0];
-        function* partition ( arr, left, right ) {
-            const pivot = arr[Math.floor( ( left + right ) / 2 )];
-            let [i, j] = [left, right];
-            for ( ;; ) {
-                while ( arr[i] < pivot ) {
-                    i++;
-                    loop++;
-                }
-                while ( pivot < arr[j] ) {
-                    j--;
-                    loop++;
-                }
-                yield {
-                    data: arr,
-                    coloringIndices: [pivot, i, j]
-                };
-                
-                if ( i >= j ) {
-                    break;
-                } else {
-                    if ( arr[i] !== arr[j] ) {
-                        [arr[i], arr[j]] = [arr[j], arr[i]];
-                        swap++;
-                    }
-                    i++;
-                    j--;
-                }
-            }
-            if ( left < i - 1 ) {
-                yield* partition( arr, left, i - 1 );
-            }
-            if ( j + 1 < right ) {
-                yield* partition( arr, j + 1, right );
-            }
-            return [loop, swap];
-        }
-        yield* partition( this.arr, 0, len - 1 );
-        [this.loops, this.swaps] = [loop, swap];
+        yield* this.partition( this.arr, 0, len - 1 );
         return this.resultProperties();
+    }
+    *partition ( arr, left, right ) {
+        const pivot = arr[Math.floor( ( left + right ) / 2 )];
+        let [i, j] = [left, right];
+        for ( ;; ) {
+            while ( arr[i] < pivot ) {
+                i++;
+                this.loops++;
+            }
+            while ( pivot < arr[j] ) {
+                j--;
+                this.loops++;
+            }
+            if ( i >= j ) {
+                break;
+            } else {
+                if ( arr[i] !== arr[j] ) {
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                    this.swaps++;
+                }
+                i++;
+                j--;
+            }
+            yield this.yieldProperties( pivot, i, j );
+        }
+        if ( left < i - 1 ) {
+            yield* this.partition( arr, left, i - 1 );
+        }
+        if ( j + 1 < right ) {
+            yield* this.partition( arr, j + 1, right );
+        }
     }
 }
 
@@ -162,51 +155,46 @@ class QuickSort extends VisualizedAlgorithm {
 class MergeSort extends VisualizedAlgorithm {
     *generator ( ) {
         const len = this.arr.length;
-        let [loop, swap] = [0, 0];
-        function* mergesort ( arr, left, right ) {
-            const _arr = [];
-            if ( left >= right - 1 ) {
-                _arr.push( arr[left] );
-            } else if ( left == right - 2 ) { 
-                if ( arr[left] < arr[right - 1] ) {
-                    _arr.push( arr[left], arr[right - 1] );
-                } else {
-                    _arr.push( arr[right - 1], arr[left] );
-                    swap++;
-                }
-            } else {
-                const mid = Math.floor( ( left + right ) / 2 );
-                const leftArr = yield* mergesort( arr, left, mid );
-                const rightArr = yield* mergesort( arr, mid, right );
-                for ( let [i, j] = [0, 0]; ; ) {
-                    if ( leftArr[i] < rightArr[j] ) {
-                        _arr.push( leftArr[i] );
-                        arr[left + i + j] = leftArr[i];
-                        i++;
-                    } else {
-                        _arr.push( rightArr[j] );
-                        arr[left + i + j] = rightArr[j];
-                        j++;
-                        swap++;
-                    }
-                    yield {
-                        data: arr,
-                        coloringIndices: [-1, left + i, mid + j]
-                    }
-                    if ( i >= leftArr.length || j >= rightArr.length ) {
-                        _arr.push( ...rightArr.slice( j ) );
-                        _arr.push( ...leftArr.slice( i ) );
-                        _arr.forEach( ( value, index ) => arr[left + index] = value );
-                        break;
-                    }
-                    loop++;
-                }
-            }
-            return _arr;
-        }
-        yield* mergesort( this.arr, 0, len );
-        [this.loops, this.swaps] = [loop, swap];
+        yield* this.mergesort( this.arr, 0, len );
         return this.resultProperties();
+    }
+    *mergesort ( arr, left, right ) {
+        const _arr = [];
+        if ( left >= right - 1 ) {
+            _arr.push( arr[left] );
+        } else if ( left == right - 2 ) { 
+            if ( arr[left] < arr[right - 1] ) {
+                _arr.push( arr[left], arr[right - 1] );
+            } else {
+                _arr.push( arr[right - 1], arr[left] );
+                this.swaps++;
+            }
+        } else {
+            const mid = Math.floor( ( left + right ) / 2 );
+            const leftArr = yield* this.mergesort( arr, left, mid );
+            const rightArr = yield* this.mergesort( arr, mid, right );
+            for ( let [i, j] = [0, 0]; ; ) {
+                if ( leftArr[i] < rightArr[j] ) {
+                    _arr.push( leftArr[i] );
+                    arr[left + i + j] = leftArr[i];
+                    i++;
+                } else {
+                    _arr.push( rightArr[j] );
+                    arr[left + i + j] = rightArr[j];
+                    j++;
+                    this.swaps++;
+                }
+                yield this.yieldProperties( left + i + j - 1, left + i, mid + j );
+                if ( i >= leftArr.length || j >= rightArr.length ) {
+                    _arr.push( ...rightArr.slice( j ) );
+                    _arr.push( ...leftArr.slice( i ) );
+                    _arr.forEach( ( value, index ) => arr[left + index] = value );
+                    break;
+                }
+                this.loops++;
+            }
+        }
+        return _arr;
     }
 }
 

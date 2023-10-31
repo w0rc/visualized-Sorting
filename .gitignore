@@ -1,5 +1,7 @@
 # Dependencies
 node_modules
+test
 
 # Generated files
 .eslintrc.json
+.vscode
