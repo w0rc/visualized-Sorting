@@ -117,7 +117,8 @@ class QuickSort extends VisualizedAlgorithm {
         return this.resultProperties();
     }
     *partition ( arr, left, right ) {
-        const pivot = arr[Math.floor( ( left + right ) / 2 )];
+        const pivot_index = Math.floor( ( left + right ) / 2 );
+        const pivot = arr[pivot_index];
         let [i, j] = [left, right];
         for ( ;; ) {
             while ( arr[i] < pivot ) {
@@ -128,6 +129,7 @@ class QuickSort extends VisualizedAlgorithm {
                 j--;
                 this.loops++;
             }
+            yield this.yieldProperties( pivot_index, i, j );
             if ( i >= j ) {
                 break;
             } else {
@@ -138,7 +140,6 @@ class QuickSort extends VisualizedAlgorithm {
                 i++;
                 j--;
             }
-            yield this.yieldProperties( pivot, i, j );
         }
         if ( left < i - 1 ) {
             yield* this.partition( arr, left, i - 1 );
